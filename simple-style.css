@@ -1,0 +1,152 @@
+/*****************************************************************************
+*
+* This file create a fairly plain calendar by styling the output of the gencal
+* script. The gencal script uses the classes extensively in its output.
+* Generally, every type output has a specialized class. This allows you fine
+* grained control over the appearance of your calendars.
+*
+* This style sheet uses every class outputted by the gencal script.
+*
+******************************************************************************/
+
+
+/*****************************************************************************
+*
+* These two classes correspond to the preamble and footer sections contents.
+* These sections' contents are wrapped in <div> tags with their corresponding
+* class.
+*
+******************************************************************************/
+.preamble, .footer {
+    text-align:center;
+    font-weight:bold;
+}
+
+/*****************************************************************************
+*
+* All of the calendars are wrapped with a <div> with this class.
+*
+******************************************************************************/
+.calendar {}
+
+/*****************************************************************************
+*
+* Each month's calendar is put in a separate table.
+*
+******************************************************************************/
+.calendar table {
+    border-collapse:collapse;
+    margin:auto;
+}
+
+/*****************************************************************************
+*
+* This is the first row in a calendar table. It is the name of the month
+* followed by the year. E.g. August 2013
+*
+******************************************************************************/
+.calendar table thead th.month-name { 
+    font-size: 2em;
+    padding-top:2em;
+}
+
+/*****************************************************************************
+*
+* These each <th> cell are the names of day of the week.
+* E.g. Sunday, Monday, etc.
+*
+******************************************************************************/
+.calendar table thead th.weekday {}
+
+/*****************************************************************************
+*
+* If the option to print weeks was enabled. These cells are where the week
+* number is printed. Note, if you disabled the option than no extraneous
+* table cells will be created.
+*
+******************************************************************************/
+.calendar table tbody td.week {
+    vertical-align:center;
+    text-align:right;
+    padding-right:.2em;
+}
+
+/*****************************************************************************
+*
+* Only the week of the semester is printed. This often leaves several weeks
+* at the beginning and ending of the calendars with no week designation.
+* Note, if you disabled the option than no extraneous table cells will be
+* created.
+*
+******************************************************************************/
+.calendar table tbody td.blank-week {
+    border:none;
+}
+
+/*****************************************************************************
+*
+* Cells that have a day-of-month number. For example, the 1st, 2nd, 3rd, etc.
+*
+******************************************************************************/
+.calendar table tbody td.number {
+    padding:.2em;
+    border: thin solid black;
+    width:150px;
+    height:150px;
+    vertical-align:top;
+}
+
+/*****************************************************************************
+*
+* At the beginning and ending of a month, there may be empty cells. For
+* example: October 2013 begins on a Tuesday and ends on a Thursday. So
+* the first Sunday and Monday; and the last Friday and Saturday would
+* on the calendar would be blank cells.
+*
+******************************************************************************/
+.calendar table tbody td.blank {
+    border:none;
+}
+
+/*****************************************************************************
+*
+* This is the number that represents the day of the month. It is the first
+* thing written in the table cell.
+*
+******************************************************************************/
+.calendar table tbody td.number div.number { 
+    text-align:right;
+}
+
+/*****************************************************************************
+*
+* Special days are days of note. If a given day matches a special day, then
+* this is the second thing written into the table cell.
+*
+******************************************************************************/
+.calendar table tbody td.number div.special {
+    font-weight: bold;
+    color:#080;
+}
+
+
+/*****************************************************************************
+*
+* This represents a holiday. Holidays may have special days text, but they
+* will have *no topics*.
+*
+******************************************************************************/
+.calendar table tbody td.number div.holiday {
+    font-size:1.25em;
+    color:red;
+}
+
+/*****************************************************************************
+*
+* If the given day of the month is a class day and not a holiday, this is the
+* topic that will be covered that day.
+*
+******************************************************************************/
+.calendar table tbody td.number div.topic {
+
+}

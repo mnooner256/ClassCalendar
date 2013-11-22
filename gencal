@@ -1,0 +1,434 @@
+#!/usr/bin/env python
+"""This python script creates a class calendar HTML file. It is designed to be
+run from the command line. It is compatible with both python2 and python3.
+
+This script requires two arguments. The first is a ini formated specification
+file that will be used to create the calendar. The second parameter should be
+the file path where to draw the HTML calendar.
+"""
+
+import sys
+import os.path
+
+class draw:
+    def __init__(self, source, html):
+        """This object is meant to be used like a function. The __init__ process the
+        source ConfigParser and writes to the html file object.
+        """
+        #This should be the ConfigParser that read in the source file
+        self.source = source
+        
+        #This should be a file object where we will write our output
+        self.html = html
+        
+        #This is used by the is_class_day 
+        self.abrev_map = {0:'u', 1:'m', 2:'t', 3:'w', 4:'r', 5:'f', 6:'s'}
+        
+        #Start the document
+        self.write('<!DOCTYPE html>')
+        self.write('<html lang="en">')
+        
+        #Draw the <head> section
+        self.draw_head()
+        
+        self.write('<body>')
+        
+        #Draw the contents of the calendar document
+        self.draw_preamble()
+        self.draw_cal()
+        self.draw_footer()
+        
+        #Finish up the document
+        self.write('\r\n</body>')
+        self.write('</html>')
+
+    def write(self, string):
+        """This writes a the given string followed by \\r\\n to the html file."""
+        self.html.write(string)
+        self.html.write('\r\n')
+        
+    def draw_head(self):
+        """This writes the head section to the html file."""
+        self.write('<head>')
+        self.write('<meta charset="utf-8">')
+        
+        #Make sure the head section exist's
+        if not self.source.has_section('head'):
+            print('Warning: No "head" section is specified.')
+            self.write('<title>Calendar</title>')
+            self.write('</head>')
+            
+            
+        if self.source.has_option('head', 'title'):
+            self.write('<title>{}</title>'.format(self.source.get('head', 'title')))
+        else:
+            self.write('<title>Calendar</title>')
+            
+        if self.source.has_option('head', 'contents'):
+            self.write(self.source.get('head', 'contents'))
+            
+        self.write('</head>')
+        
+    def draw_preamble(self):
+        """This writes the preamble section to the html file."""
+        self.draw_optional_contents('preamble')
+        
+    def draw_footer(self):
+        """This writes the footer section to the html file."""
+        self.draw_optional_contents('footer')
+
+    def draw_optional_contents(self, section):
+        """This is a generalized method that draws optional sections that only
+        have contents option into the html file"""
+        if not self.source.has_section(section):
+            return
+            
+        if self.source.has_option(section, 'contents'):
+            self.write('\r\n<div class="{}">'.format(section))
+            self.write(self.source.get(section, 'contents'))
+            self.write('</div>')
+        else:
+            print('Warning: Found a "{}" section, but no "contents" option.'.format(section))
+            
+    def parse_date(self, string):
+        """This method expects a string in the format D-M-YYYY and returns
+        a datetime object corresponding to the fields.
+        """
+        import datetime
+        
+        year, month, day = string.split()
+        return datetime.date(int(year), int(month), int(day))
+            
+    def draw_cal(self):
+        """This is the meat of the program. This method draws the the 
+        calendars in HTML. It inserts topic, holidays, etc."""
+        import datetime
+        import calendar
+        
+        #Make sure we have the all important calendar section
+        if not self.source.has_section('calendar'):
+            raise SyntaxError('The input file must have a "calendar" section.')
+        
+        #Parse out the the starting and ending dates
+        start_date = self.parse_date(self.source.get('calendar', 'start'))
+        end_date = self.parse_date(self.source.get('calendar', 'end'))
+        
+        #Should we have a special cell just to display the week
+        self.show_weeks = self.source.getboolean('calendar', 'show_weeks')
+        n_week = 1 #Week accumulator
+        
+        #Get the holidays
+        if self.source.has_option('calendar', 'holidays'):
+            holiday_list = self.source.get('calendar', 'holidays')
+            holiday_list = holiday_list.split('\n')
+            
+            holiday = days_generator(holiday_list, 'holiday')
+        else:
+            holiday = none_generator()
+        
+        #Set the current holiday we will look for    
+        cur_holiday = gen_next(holiday)
+        
+        #Get the special days
+        if self.source.has_option('calendar', 'special'):
+            special_list = self.source.get('calendar', 'special')
+            special_list = special_list.split('\n')
+            
+            special = days_generator(special_list, 'special day')
+        else:
+            special = none_generator()
+        
+        #Set the current holiday we will look for    
+        cur_special = gen_next(special)
+        
+        #We add items based on the class days pattern
+        if not self.source.has_option('calendar', 'class_days'):
+            raise SyntaxError('Section calendar requires the class_days option')
+            
+        #Store the class days in the object itself. The is_class_day() method
+        #will use it to figure out if the current day is a class day based on
+        #this pattern. E.g. MWF, TR, MTWRF
+        self.class_days = self.source.get('calendar', 'class_days').lower();
+        
+        #Load the calendar's topics
+        if not self.source.has_option('calendar', 'topics'):
+            raise SyntaxError('Section calendar requires the topics option')
+
+        #This will set what topics will be displayed for what days
+        topics = topics_generator(self.source.get('calendar', 'topics').split('\n'))
+        
+        #Set Sunday as the first day of the week in the calendar
+        #default is Monday
+        calendar.setfirstweekday(6)
+        
+        #Start the calendar
+        self.write('<div class="calendar">')
+        
+        #Loop through all of the months between the start and end months
+        for month in xrange(start_date.month, end_date.month+1):
+            #Get the date of the 1st of the current month
+            cur_date = start_date.replace(start_date.year, month, 1)
+
+            #Start the this month's table
+            self.write('<table><thead>')
+            self.write('<tr>')
+            
+            #Add a blank header cell if we are going to show weeks.
+            #makes the centered month name *look* centered
+            if self.show_weeks:
+                self.write('<th></th>')
+                
+            #Write out the month name and the year
+            self.write(cur_date.strftime('<th class="month-name" colspan="7">%B %Y</th>'))
+        
+            #Start the week day header row
+            self.write('<tr>')
+            
+            #If we need to print a blank cell where the Week # go in the calendar
+            if self.show_weeks:
+                self.write('<th class="blank"></th>')
+                
+            #Print out the days of the week. The first element in the list is
+            #Monday with the last being Sunday. We will use an explicit list
+            #of indexes to get around this.
+            for i in [6,0,1,2,3,4,5]:
+                self.write('<th class="weekday">{}</th>'.format(calendar.day_name[i]))
+            
+            #Close out the row
+            self.write('</tr>')
+            
+            #Close out the table header and begin the table's body
+            self.write('</thead><tbody>')
+            
+            #Print the actual calendar. The monthcalendar() returns a matrix
+            #of day numbers. Zero indicates it should be a blank cell.
+            for row in calendar.monthcalendar(cur_date.year, cur_date.month):
+                #Begin this week's table row
+                self.write('<tr>')
+                
+                #We need to make sure that the week we are calculating the
+                #date for is valid even at the start and end of a calendar,
+                #where we can encounter 0 (marking blank cells).
+                if row[6] != 0:
+                    now = datetime.date(cur_date.year, cur_date.month, row[6])
+                else:
+                    now = datetime.date(cur_date.year, cur_date.month, row[0])
+                
+                #Print the week number if we are inside the start and end dates
+                #of the course, and if the flag is true of course
+                if self.show_weeks:
+                    if now >= start_date and now <= end_date:
+                        self.write('<td class="week">Week {}</td>'.format(n_week))
+                        n_week += 1
+                    else:
+                        self.write('<td class="blank-week"></td>')
+                    
+                #Create the individual number cells
+                for day_of_week, day in enumerate(row):
+                    #0 marks empty cells at the start and end of a month.
+                    #Do no further processing on these empty cells
+                    if day == 0:
+                        self.write('<td class="blank"></td>')
+                        continue
+
+                    #Start the table cell and draw the day number.
+                    self.write('<td class="number"><div class="number">{}</div>'.format(day))
+                     
+                    #Create a date object for the current day of the month
+                    now = datetime.date(cur_date.year, cur_date.month, day)
+                    
+                    #See if we need to print out special day information
+                    if cur_special['date'] == now:
+                        self.write('<div class="special">{}</div>'.format(cur_special['name']))
+                        
+                        #Start looking for the next special day
+                        cur_special = gen_next(special)
+                    
+                    #See if this is a holiday
+                    if cur_holiday['date'] == now:
+                        self.write('<div class="holiday">{}</div>'.format(cur_holiday['name']))
+                        
+                        #Start looking for the next holiday
+                        cur_holiday = gen_next(holiday)
+                        
+                        #On holidays we do not process topics
+                        continue
+                        
+                    #If it is a class day, print out the day's topic
+                    if self.is_class_day(day_of_week) and \
+                       start_date <= now <= end_date:
+                        self.write('<div class="topic">{}</div>'.format(gen_next(topics)))
+
+                    #Done with this day
+                    self.write('</td>')
+                    
+                #Finished with the week
+                self.write('</tr>')
+            
+            #Finished with this month's calendar
+            self.write('</tbody></table>')
+
+        #Finished all of the calendars
+        self.write('</div>')
+
+    def is_class_day(self, day_of_week):
+        """This function returns True if the day_of_week number is a class day.
+        This is determined by finding the day_of_week number's corresponding
+        letter abbreviation. Then seeing if the abbreviation is found in the
+        class_days option from the source file.
+        """
+        return self.abrev_map[day_of_week] in self.class_days
+        
+def gen_next(generator):
+    """This function returns the next item from a generator. It is here to
+    bridge the change from python2 to python3 in how next() is called on
+    generators."""
+    if hasattr(generator, 'next'):  #Python 2
+        return generator.next()
+    else:                           #Python 3
+        return next(generator)
+        
+
+def none_generator():
+    """Holidays and Special days are optional. This generator returns a
+    dictionary in the same format, but with None for both fields. Hence,
+    no holidays or special days will get added.
+    """
+    while True:
+        yield {'date':None, 'name':None}
+        
+def days_generator(days_list, err_text):
+    """This generator yields each member of the holidays or special days list.
+    The days_list should be a list of each special/holiday, each item in the
+    list should be a string with the following format:
+        
+        YYYY MM DD Holiday/Special day string to print
+    
+    Note, this list will be pre-processed and sorted. The calendar
+    algorithm depends on the holidays and special days being yielded in order.
+    The easy way to guarantee this is to pre-create the result dictionaries as
+    a list then sort the list.
+    
+    Start a line with # or ; to comment out items.
+    
+    This generator yields a dictionary. The dictionary contains a 'date' key
+    whose value is a datetime.date object representing when the holiday/special
+    day is to occur. The dictionary also contains a 'name' key that corresponds
+    to the string to be printed in the table cell.
+    
+    When the list is exhausted, an infinite number of
+    {'date':None, 'name':None} will be yielded.
+    """
+    import datetime
+    
+    #This will hold all of the days dictionaries before sorting.
+    days = []
+
+    #Pre-process the days_list into a dictionary format
+    for item in days_list:
+        #Parse the string into fields separated by whitespace
+        fields = item.strip().split(None, 3)
+        try:
+            year = int(fields[0])
+        except ValueError:
+            print('Syntax Error: Invalid year "{}"'.format(fields[0],item))
+            sys.exit(1)
+        
+        try:
+            month = int(fields[1])
+        except ValueError:
+            print('Syntax Error: Invalid month "{}"'.format(fields[1],item))
+            sys.exit(1)
+            
+        try:
+            day = int(fields[2])
+        except ValueError:
+            print('Syntax Error: Invalid day "{}" from item:\n{}'.format(fields[2],item))
+            sys.exit(1)
+
+        name = fields[3].strip()
+
+        #Basic error detection
+        if len(str(year)) < 4:
+            print('Warning: Invalid year "{}", {} should be formated as follows:'.format(year, err_text))
+            print('         YYYY MM DD Text to put on calendar')
+        elif month <= 0 or month > 12:
+            print('Warning: Invalid month "{}", {} should be formated as follows:'.format(month, err_text))
+            print('         YYYY MM DD Text to put on calendar')
+        elif day <= 0 or day > 31:
+            print('Warning: Invalid day "{}", {} should be formated as follows:'.format(day, err_text))
+            print('         YYYY MM DD Text to put on calendar')
+        
+        #Make sure the combination is a valid date
+        try:
+            the_date = datetime.date(year, month, day)
+        except:
+            print('Warning: Holiday date "{} {} {}" is not a valid date'.format(
+                  year, month, day))
+
+        days.append({'date':the_date, 'name':name.strip()})
+    
+    #Sort the days by date, then yield them one at a time
+    for day in sorted(days, key=lambda x: x['date']):
+        yield day
+        
+    #Ran out of special/holidays.
+    while True:
+        yield {'date':None, 'name':None}
+
+def topics_generator(topics_list):
+    """This is a simple generator that yields a string from a list of strings
+    representing the different topics in the class. Start a line with # or ; to
+    comment out items.
+    
+    When the list is exhausted an infinite number the empty strings are
+    yielded. When the generator enters this state, a Warning is printed.
+    """
+    for topic in topics_list:
+        yield topic.strip()
+        
+    #We should really never enter this state
+    while True:
+        print('Warning, exhausted all topics in the list, but class days '
+              'are still available. Yielding an empty day.')
+        yield ''
+    
+
+#This is a Python2 to Python3 package name change
+try:
+    import configparser
+    
+    #In Python3 alias range to xrange it makes things easier
+    xrange = range
+except ImportError:
+    import ConfigParser as configparser    
+    
+#These are the valid sections in a spec file
+valid_sections = ('head', 'preamble', 'footer', 'calendar')
+
+#This is the general usage/help message
+usage = 'usage: {} cal-spec-file out-put-html-file'.format(__file__)
+
+#Make sure there are enough arguments
+if len(sys.argv) < 3:
+    print(usage)
+    sys.exit(1)
+    
+#Make sure the Spec file exists
+elif not os.path.isfile(sys.argv[1]):
+    print('Error: Spec file does not exist')
+    print(usage)
+    sys.exit(2)
+    
+#Read the whole spec file into memory
+source = configparser.ConfigParser()
+source.read(sys.argv[1])
+    
+#Check that each section is a VALID section
+for section in source.sections():
+    if section.lower() not in valid_sections:
+        print('Syntax Error: "{}" is not a valid section header.'.format(section))
+    
+#Draw the HTML file
+with open(sys.argv[2], 'w') as html:
+    draw(source, html)

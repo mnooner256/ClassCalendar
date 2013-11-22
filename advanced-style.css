@@ -1,0 +1,103 @@
+/*****************************************************************************
+*
+* This file is meant to demo a more aestheically pleasing calendar than was
+* shown in the simple-style.css file.
+*
+******************************************************************************/
+
+body {
+    color:#333;
+    background-color:#AAA;
+}
+
+.preamble, .footer {
+    text-align:center;
+}
+
+.preamble {
+    font-size:50px;
+    color:#55C;
+    text-shadow: 4px 4px 2px black;
+}
+
+
+.calendar table {
+    margin:auto;
+    margin-top:100px;
+    -webkit-box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.75);
+    box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.75);
+}
+    
+.calendar table, th.month-name {
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.calendar table {
+    background-color:#55C;
+}
+
+th.month-name { 
+    font-size: 2em;
+    padding:1em;
+    color:white;
+}
+    
+
+th.weekday, td.week {
+    color:white;
+}
+
+td.week {
+    vertical-align:center;
+    text-align:right;
+    padding-right:.2em;
+    padding-left:.2em;
+}
+
+td.blank-week {
+    border:none;
+}
+
+td.number {
+    padding:.2em;
+    border: thin solid black;
+    width:150px;
+    height:241px; /*From golden ratio */
+    vertical-align:top;
+    background-color:#FFF;
+    border-radius:10px;
+    text-align:center;
+    
+}
+
+td.number:hover {
+    background-color:#BBF;
+}
+
+td.blank:hover {
+    background-color:#55A;
+    border-radius:10px;
+}
+
+div.number { 
+    text-align:right;
+}
+
+div.special {
+    font-weight: bold;
+    color:#050;
+}
+
+
+.calendar table tbody td.number div.holiday {
+    font-size:1.25em;
+    color:#AA5050;
+}
+
+.calendar table tbody td.number div.topic {
+
+}
