@@ -6,6 +6,9 @@ compatible with both python 2.7 and python 3. It uses only the python standard
 library, no external libraries are needed. The best means to understand what
 goes into a specification file is to read the example in the repository.
 
+To be clear, you only need the gencal script. The other files are there as
+example input and example style sheets.
+
 Usage
 -----
 

@@ -1,40 +1,40 @@
 /*****************************************************************************
 *
-* This file create a fairly plain calendar by styling the output of the gencal
-* script. The gencal script uses the classes extensively in its output.
-* Generally, every type output has a specialized class. This allows you fine
-* grained control over the appearance of your calendars.
+* This file creates a fairly plain calendar by styling the output of the
+* gencal script. The gencal script uses classes extensively in its output.
+* Generally, every type out output has a specialized class. This allows you
+* fine grained control over the appearance of your calendars.
 *
-* This style sheet uses every class outputted by the gencal script.
+* This style sheet uses every class outputted by the gencal script. Also it
+* uses very explicit paths to illustrate the hierarchy of the generated
+* HTML code.
 *
 ******************************************************************************/
 
 
 /*****************************************************************************
 *
-* These two classes correspond to the preamble and footer sections contents.
-* These sections' contents are wrapped in <div> tags with their corresponding
-* class.
+* These two classes correspond to the preamble and footer sections' contents.
 *
 ******************************************************************************/
-.preamble, .footer {
+div.preamble, div.footer {
     text-align:center;
     font-weight:bold;
 }
 
 /*****************************************************************************
 *
-* All of the calendars are wrapped with a <div> with this class.
+* All of the calendars are contained within this <div>.
 *
 ******************************************************************************/
-.calendar {}
+div.calendar {}
 
 /*****************************************************************************
 *
 * Each month's calendar is put in a separate table.
 *
 ******************************************************************************/
-.calendar table {
+div.calendar table {
     border-collapse:collapse;
     margin:auto;
 }
@@ -45,18 +45,17 @@
 * followed by the year. E.g. August 2013
 *
 ******************************************************************************/
-.calendar table thead th.month-name { 
+div.calendar table thead th.month-name { 
     font-size: 2em;
     padding-top:2em;
 }
 
 /*****************************************************************************
 *
-* These each <th> cell are the names of day of the week.
-* E.g. Sunday, Monday, etc.
+* These are the day of the week headers. E.g. Sunday, Monday, etc.
 *
 ******************************************************************************/
-.calendar table thead th.weekday {}
+div.calendar table thead th.weekday {}
 
 /*****************************************************************************
 *
@@ -65,7 +64,7 @@
 * table cells will be created.
 *
 ******************************************************************************/
-.calendar table tbody td.week {
+div.calendar table tbody td.week {
     vertical-align:center;
     text-align:right;
     padding-right:.2em;
@@ -75,37 +74,42 @@
 *
 * Only the week of the semester is printed. This often leaves several weeks
 * at the beginning and ending of the calendars with no week designation.
-* Note, if you disabled the option than no extraneous table cells will be
-* created.
+* Also a blank cell is needed in the weekday row. Note, if you disabled the
+* option than no extraneous table cells will be created.
 *
 ******************************************************************************/
-.calendar table tbody td.blank-week {
+div.calendar table tbody td.blank-week, div.calendar table thead th.blank-week{
+    border:none;
+}
+
+/*****************************************************************************
+
+*
+* At the beginning and ending of a month, there may be empty cells. For
+* example: October 2013 begins on a Tuesday and ends on a Thursday. So
+* the first Sunday and Monday; and the last Friday and Saturday would
+* be blank cells.
+*
+
+******************************************************************************/
+div.calendar table tbody td.blank {
     border:none;
 }
 
 /*****************************************************************************
 *
 * Cells that have a day-of-month number. For example, the 1st, 2nd, 3rd, etc.
+* In other words, these are the majority of the table's cells. They also hold
+* the majority of the table's contents.
 *
 ******************************************************************************/
-.calendar table tbody td.number {
+div.calendar table tbody td.number {
     padding:.2em;
     border: thin solid black;
     width:150px;
     height:150px;
     vertical-align:top;
-}
-
-/*****************************************************************************
-*
-* At the beginning and ending of a month, there may be empty cells. For
-* example: October 2013 begins on a Tuesday and ends on a Thursday. So
-* the first Sunday and Monday; and the last Friday and Saturday would
-* on the calendar would be blank cells.
-*
-******************************************************************************/
-.calendar table tbody td.blank {
-    border:none;
+    text-align:center;
 }
 
 /*****************************************************************************
@@ -114,7 +118,7 @@
 * thing written in the table cell.
 *
 ******************************************************************************/
-.calendar table tbody td.number div.number { 
+div.calendar table tbody td.number div.number { 
     text-align:right;
 }
 
@@ -124,7 +128,7 @@
 * this is the second thing written into the table cell.
 *
 ******************************************************************************/
-.calendar table tbody td.number div.special {
+div.calendar table tbody td.number div.special {
     font-weight: bold;
     color:#080;
 }
@@ -136,7 +140,7 @@
 * will have *no topics*.
 *
 ******************************************************************************/
-.calendar table tbody td.number div.holiday {
+div.calendar table tbody td.number div.holiday {
     font-size:1.25em;
     color:red;
 }
@@ -147,6 +151,6 @@
 * topic that will be covered that day.
 *
 ******************************************************************************/
-.calendar table tbody td.number div.topic {
+div.calendar table tbody td.number div.topic {
 
 }
