@@ -30,6 +30,6 @@ second filepath.
 $ gencal ini-spec-file output.html
 ```
 
-To be clear, you only need from this repository is the gencal script. The
+To be clear, you only need the gencal script from this repository. The
 other files are there as example input and example style sheets.
 
