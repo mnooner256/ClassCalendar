@@ -8,9 +8,9 @@ dates, the pattern of the days (e.g. MWF or TR), and a series of topics that
 will be discussed on any given class day. The generator also accepts some
 optional content, holidays for example.
 
-Tells the script about the class using a specification file. The specification
-file is a plain INI file. The best means to understand what goes into a
-specification file is to read the example in the repository.
+The user tells the script about the class using a specification file. The
+specification file is a plain INI file. The best means to understand what goes
+into a specification file is to read the example in the repository.
 
 
 Requirements
