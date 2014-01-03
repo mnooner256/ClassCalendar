@@ -219,7 +219,11 @@ class draw:
                 if self.show_weeks:
                     if now >= start_date and now <= end_date:
                         self.write('<td class="week">Week {}</td>'.format(n_week))
-                        n_week += 1
+                        
+                        #Don't increment the week if the week ends
+                        #with blank cells
+                        if row[6] != 0:
+                            n_week += 1
                     else:
                         self.write('<td class="blank-week"></td>')
                     
